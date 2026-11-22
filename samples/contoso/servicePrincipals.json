@@ -1,0 +1,26 @@
+[
+  {
+    "id": "sp-mailsync",
+    "displayName": "MailSync Pro",
+    "appId": "0f6a-sample",
+    "verifiedPublisher": {
+      "displayName": null
+    }
+  },
+  {
+    "id": "sp-teams",
+    "displayName": "Microsoft Teams",
+    "appId": "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
+    "verifiedPublisher": {
+      "displayName": "Microsoft Corporation"
+    }
+  },
+  {
+    "id": "sp-crm",
+    "displayName": "Acme CRM",
+    "appId": "2b-sample",
+    "verifiedPublisher": {
+      "displayName": "Acme Software Inc."
+    }
+  }
+]

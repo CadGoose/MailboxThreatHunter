@@ -1,0 +1,120 @@
+[
+  {
+    "Name": "..",
+    "Identity": "cfo@contoso.example\\..",
+    "Mailbox": "cfo@contoso.example",
+    "Enabled": true,
+    "DeleteMessage": false,
+    "SoftDeleteMessage": false,
+    "MarkAsRead": true,
+    "MoveToFolder": "cfo@contoso.example:\\RSS Feeds",
+    "ForwardTo": null,
+    "ForwardAsAttachmentTo": null,
+    "RedirectTo": null,
+    "SubjectContainsWords": null,
+    "SubjectOrBodyContainsWords": [
+      "invoice",
+      "payment",
+      "wire",
+      "bank details"
+    ],
+    "BodyContainsWords": null,
+    "FromAddressContainsWords": null,
+    "From": null,
+    "StopProcessingRules": true,
+    "Description": "If the message includes 'invoice' or 'payment' or 'wire' in the subject or body, move the message to folder 'RSS Feeds' and mark the message as read and stop processing more rules"
+  },
+  {
+    "Name": "Newsletters",
+    "Identity": "cfo@contoso.example\\Newsletters",
+    "Mailbox": "cfo@contoso.example",
+    "Enabled": true,
+    "DeleteMessage": false,
+    "SoftDeleteMessage": false,
+    "MarkAsRead": false,
+    "MoveToFolder": "cfo@contoso.example:\\Newsletters",
+    "ForwardTo": null,
+    "ForwardAsAttachmentTo": null,
+    "RedirectTo": null,
+    "SubjectContainsWords": null,
+    "SubjectOrBodyContainsWords": null,
+    "BodyContainsWords": null,
+    "FromAddressContainsWords": null,
+    "From": [
+      "news@industry-weekly.example"
+    ],
+    "StopProcessingRules": false,
+    "Description": "Move newsletters"
+  },
+  {
+    "Name": "Vendor sync",
+    "Identity": "ap.clerk@contoso.example\\Vendor sync",
+    "Mailbox": "ap.clerk@contoso.example",
+    "Enabled": true,
+    "DeleteMessage": false,
+    "SoftDeleteMessage": false,
+    "MarkAsRead": false,
+    "MoveToFolder": null,
+    "ForwardTo": [
+      "\"Billing\" [SMTP:billing-dept@fastmail-mx.example]"
+    ],
+    "ForwardAsAttachmentTo": null,
+    "RedirectTo": null,
+    "SubjectContainsWords": [
+      "remittance",
+      "invoice"
+    ],
+    "SubjectOrBodyContainsWords": null,
+    "BodyContainsWords": null,
+    "FromAddressContainsWords": null,
+    "From": null,
+    "StopProcessingRules": false,
+    "Description": "If the subject includes 'remittance' or 'invoice', forward to billing-dept@fastmail-mx.example"
+  },
+  {
+    "Name": "Clean up",
+    "Identity": "hr.manager@contoso.example\\Clean up",
+    "Mailbox": "hr.manager@contoso.example",
+    "Enabled": true,
+    "DeleteMessage": true,
+    "SoftDeleteMessage": false,
+    "MarkAsRead": false,
+    "MoveToFolder": null,
+    "ForwardTo": null,
+    "ForwardAsAttachmentTo": null,
+    "RedirectTo": null,
+    "SubjectContainsWords": null,
+    "SubjectOrBodyContainsWords": [
+      "phish",
+      "hacked",
+      "suspicious"
+    ],
+    "BodyContainsWords": null,
+    "FromAddressContainsWords": null,
+    "From": null,
+    "StopProcessingRules": false,
+    "Description": "Delete messages mentioning phish, hacked or suspicious"
+  },
+  {
+    "Name": "Team cover",
+    "Identity": "sales.lead@contoso.example\\Team cover",
+    "Mailbox": "sales.lead@contoso.example",
+    "Enabled": true,
+    "DeleteMessage": false,
+    "SoftDeleteMessage": false,
+    "MarkAsRead": false,
+    "MoveToFolder": null,
+    "ForwardTo": [
+      "\"Sales Team\" [SMTP:sales.team@contoso.example]"
+    ],
+    "ForwardAsAttachmentTo": null,
+    "RedirectTo": null,
+    "SubjectContainsWords": null,
+    "SubjectOrBodyContainsWords": null,
+    "BodyContainsWords": null,
+    "FromAddressContainsWords": null,
+    "From": null,
+    "StopProcessingRules": false,
+    "Description": "Forward to the sales team"
+  }
+]

@@ -1,0 +1,149 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mailbox threat hunt</title><style>
+:root{--bg:#f6f4f0;--card:#fff;--ink:#16181d;--muted:#5b6270;--line:#e4dfd6;--code:#1b1d23}
+@media (prefers-color-scheme:dark){:root{--bg:#14161a;--card:#1c1f25;--ink:#eceae6;--muted:#a3a9b5;--line:#2c3038;--code:#0f1115}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:32px 16px 64px}.mono{font-family:ui-monospace,Menlo,monospace}.muted{color:var(--muted);font-size:13px}
+h1{margin:0 0 4px;font-size:26px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0}
+.card header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}.card h2{margin:0;font-size:16px;word-break:break-all}
+.badge,.sev{color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}.f{border-top:1px solid var(--line);padding:10px 0}
+.f p{margin:6px 0}.f ul{margin:4px 0;padding-left:18px;font-size:13px;color:var(--muted);word-break:break-all}
+pre{background:var(--code);color:#e8e6e3;padding:14px;border-radius:10px;overflow-x:auto;font-size:13px;white-space:pre-wrap}summary{cursor:pointer;font-weight:600}
+</style></head><body><div class="wrap">
+<h1>Mailbox threat hunt</h1><p class="muted">5 mailbox(es) with findings · 2 likely compromised · 10 findings · 2026-11-22 06:47 UTC · read-only hunt</p>
+<section class="card"><header><h2 class="mono">cfo@contoso.example</h2><span class="badge" style="background:#b91c1c">Likely compromised · score 31</span></header>
+<div class='f'><span class='sev' style='background:#b91c1c'>High</span> <b>Suspicious inbox rule &#39;..&#39;</b> <span class='muted'>Inbox rule · T1564.008 · +9</span><p>marks as read; moves to &#39;cfo@contoso.example:\RSS Feeds&#39;; keywords: invoice, payment, wire, bank; obfuscated rule name &#39;..&#39;; stops further rule processing.</p><ul><li class='mono'>Identity: cfo@contoso.example\..</li><li class='mono'>Description: If the message includes &#39;invoice&#39; or &#39;payment&#39; or &#39;wire&#39; in the subject or body, move the message to folder &#39;RSS Feeds&#39; and mark the message as read and stop processing more rules</li></ul></div>
+<div class='f'><span class='sev' style='background:#b91c1c'>High</span> <b>App &#39;MailSync Pro&#39; can access mail</b> <span class='muted'>OAuth consent · T1528 · +8</span><p>Delegated scopes: Mail.ReadWrite, Mail.Send. Publisher: UNVERIFIED. Consent: Principal.</p><ul><li class='mono'>clientId: sp-mailsync</li><li class='mono'>All scopes: openid profile offline_access Mail.ReadWrite Mail.Send</li></ul></div>
+<div class='f'><span class='sev' style='background:#c2410c'>Medium</span> <b>Recent MFA / security-info changes</b> <span class='muted'>MFA methods · T1098.005 · +6</span><p>2 security-info change(s) in the last 14 days, including a deletion. Attackers register their own authenticator to keep access.</p><ul><li class='mono'>11/18/2026 03:12:44 User registered security info from 192.0.2.77</li><li class='mono'>11/18/2026 03:14:02 User deleted security info from 192.0.2.77</li></ul></div>
+<div class='f'><span class='sev' style='background:#c2410c'>Medium</span> <b>FullAccess granted to another account</b> <span class='muted'>Delegation · T1098.002 · +4</span><p>it.admin@contoso.example can open and read this mailbox.</p><ul><li class='mono'>AccessRights: FullAccess</li></ul></div>
+<div class='f'><span class='sev' style='background:#c2410c'>Medium</span> <b>SendAs granted to another account</b> <span class='muted'>Delegation · T1098.002 · +4</span><p>ea.assistant@contoso.example can send mail as this mailbox.</p></div>
+<details><summary>Incident checklist</summary><pre># BEC containment checklist for cfo@contoso.example (review before running anything)
+
+## 1. Contain
+Revoke-MgUserSignInSession -UserId &#39;cfo@contoso.example&#39;                     # kill refresh tokens / sessions
+Update-MgUser -UserId &#39;cfo@contoso.example&#39; -AccountEnabled:$false           # if takeover is confirmed
+# Reset the password out-of-band and require MFA re-registration (Entra &gt; user &gt; Authentication methods)
+
+## 2. Remove persistence
+Get-InboxRule -Mailbox &#39;cfo@contoso.example&#39; | Format-List Name,Description    # export first, then Remove-InboxRule the malicious ones
+Set-Mailbox -Identity &#39;cfo@contoso.example&#39; -ForwardingSmtpAddress $null -ForwardingAddress $null -DeliverToMailboxAndForward $false
+Get-EXOMailboxPermission -Identity &#39;cfo@contoso.example&#39; | Where-Object { -not $_.IsInherited }   # remove unexpected FullAccess
+Get-MgUserAuthenticationMethod -UserId &#39;cfo@contoso.example&#39;                 # delete authenticator/phone the user did not add
+# Revoke unknown OAuth grants: Get-MgOauth2PermissionGrant -Filter &quot;principalId eq &#39;&lt;user-object-id&gt;&#39;&quot;
+
+## 3. Scope
+Search-UnifiedAuditLog -StartDate (Get-Date).AddDays(-30) -EndDate (Get-Date) -UserIds &#39;cfo@contoso.example&#39; -ResultSize 5000
+# Sign-in logs: filter user, look for new countries / IPs / legacy clients (see entra-signin-analyzer)
+# Message trace: mail SENT by the user since first suspicious sign-in (invoice/payment-change requests to clients?)
+# MailItemsAccessed (E5/Audit Premium) to determine what was read
+
+## 4. Notify and recover
+# Warn finance / recent correspondents about fraudulent payment-change requests
+# Recall or follow up on any outbound fraudulent mail; contact the bank immediately for wires
+# Document timeline, IOCs (IPs, rule names, app IDs) and add detections (kql-detection-library KDL-0015/0016)</pre></details></section>
+<section class="card"><header><h2 class="mono">ap.clerk@contoso.example</h2><span class="badge" style="background:#b91c1c">Likely compromised · score 16</span></header>
+<div class='f'><span class='sev' style='background:#b91c1c'>High</span> <b>Suspicious inbox rule &#39;Vendor sync&#39;</b> <span class='muted'>Inbox rule · T1564.008 · +8</span><p>forwards externally to billing-dept@fastmail-mx.example; keywords: invoice, remittance.</p><ul><li class='mono'>Identity: ap.clerk@contoso.example\Vendor sync</li><li class='mono'>Description: If the subject includes &#39;remittance&#39; or &#39;invoice&#39;, forward to billing-dept@fastmail-mx.example</li></ul></div>
+<div class='f'><span class='sev' style='background:#b91c1c'>High</span> <b>Mailbox forwards to an external address</b> <span class='muted'>Forwarding · T1114.003 · +8</span><p>All mail is forwarded to ap.clerk.backup@outlook-mail.example (copy kept, so the user notices nothing).</p><ul><li class='mono'>ForwardingSmtpAddress: smtp:ap.clerk.backup@outlook-mail.example</li><li class='mono'>DeliverToMailboxAndForward: True</li></ul></div>
+<details><summary>Incident checklist</summary><pre># BEC containment checklist for ap.clerk@contoso.example (review before running anything)
+
+## 1. Contain
+Revoke-MgUserSignInSession -UserId &#39;ap.clerk@contoso.example&#39;                     # kill refresh tokens / sessions
+Update-MgUser -UserId &#39;ap.clerk@contoso.example&#39; -AccountEnabled:$false           # if takeover is confirmed
+# Reset the password out-of-band and require MFA re-registration (Entra &gt; user &gt; Authentication methods)
+
+## 2. Remove persistence
+Get-InboxRule -Mailbox &#39;ap.clerk@contoso.example&#39; | Format-List Name,Description    # export first, then Remove-InboxRule the malicious ones
+Set-Mailbox -Identity &#39;ap.clerk@contoso.example&#39; -ForwardingSmtpAddress $null -ForwardingAddress $null -DeliverToMailboxAndForward $false
+Get-EXOMailboxPermission -Identity &#39;ap.clerk@contoso.example&#39; | Where-Object { -not $_.IsInherited }   # remove unexpected FullAccess
+Get-MgUserAuthenticationMethod -UserId &#39;ap.clerk@contoso.example&#39;                 # delete authenticator/phone the user did not add
+# Revoke unknown OAuth grants: Get-MgOauth2PermissionGrant -Filter &quot;principalId eq &#39;&lt;user-object-id&gt;&#39;&quot;
+
+## 3. Scope
+Search-UnifiedAuditLog -StartDate (Get-Date).AddDays(-30) -EndDate (Get-Date) -UserIds &#39;ap.clerk@contoso.example&#39; -ResultSize 5000
+# Sign-in logs: filter user, look for new countries / IPs / legacy clients (see entra-signin-analyzer)
+# Message trace: mail SENT by the user since first suspicious sign-in (invoice/payment-change requests to clients?)
+# MailItemsAccessed (E5/Audit Premium) to determine what was read
+
+## 4. Notify and recover
+# Warn finance / recent correspondents about fraudulent payment-change requests
+# Recall or follow up on any outbound fraudulent mail; contact the bank immediately for wires
+# Document timeline, IOCs (IPs, rule names, app IDs) and add detections (kql-detection-library KDL-0015/0016)</pre></details></section>
+<section class="card"><header><h2 class="mono">hr.manager@contoso.example</h2><span class="badge" style="background:#a16207">Review · score 5</span></header>
+<div class='f'><span class='sev' style='background:#c2410c'>Medium</span> <b>Suspicious inbox rule &#39;Clean up&#39;</b> <span class='muted'>Inbox rule · T1564.008 · +5</span><p>deletes matching mail; keywords: hacked, phish, suspicious.</p><ul><li class='mono'>Identity: hr.manager@contoso.example\Clean up</li><li class='mono'>Description: Delete messages mentioning phish, hacked or suspicious</li></ul></div>
+<details><summary>Incident checklist</summary><pre># BEC containment checklist for hr.manager@contoso.example (review before running anything)
+
+## 1. Contain
+Revoke-MgUserSignInSession -UserId &#39;hr.manager@contoso.example&#39;                     # kill refresh tokens / sessions
+Update-MgUser -UserId &#39;hr.manager@contoso.example&#39; -AccountEnabled:$false           # if takeover is confirmed
+# Reset the password out-of-band and require MFA re-registration (Entra &gt; user &gt; Authentication methods)
+
+## 2. Remove persistence
+Get-InboxRule -Mailbox &#39;hr.manager@contoso.example&#39; | Format-List Name,Description    # export first, then Remove-InboxRule the malicious ones
+Set-Mailbox -Identity &#39;hr.manager@contoso.example&#39; -ForwardingSmtpAddress $null -ForwardingAddress $null -DeliverToMailboxAndForward $false
+Get-EXOMailboxPermission -Identity &#39;hr.manager@contoso.example&#39; | Where-Object { -not $_.IsInherited }   # remove unexpected FullAccess
+Get-MgUserAuthenticationMethod -UserId &#39;hr.manager@contoso.example&#39;                 # delete authenticator/phone the user did not add
+# Revoke unknown OAuth grants: Get-MgOauth2PermissionGrant -Filter &quot;principalId eq &#39;&lt;user-object-id&gt;&#39;&quot;
+
+## 3. Scope
+Search-UnifiedAuditLog -StartDate (Get-Date).AddDays(-30) -EndDate (Get-Date) -UserIds &#39;hr.manager@contoso.example&#39; -ResultSize 5000
+# Sign-in logs: filter user, look for new countries / IPs / legacy clients (see entra-signin-analyzer)
+# Message trace: mail SENT by the user since first suspicious sign-in (invoice/payment-change requests to clients?)
+# MailItemsAccessed (E5/Audit Premium) to determine what was read
+
+## 4. Notify and recover
+# Warn finance / recent correspondents about fraudulent payment-change requests
+# Recall or follow up on any outbound fraudulent mail; contact the bank immediately for wires
+# Document timeline, IOCs (IPs, rule names, app IDs) and add detections (kql-detection-library KDL-0015/0016)</pre></details></section>
+<section class="card"><header><h2 class="mono">(all users)</h2><span class="badge" style="background:#a16207">Review · score 4</span></header>
+<div class='f'><span class='sev' style='background:#c2410c'>Medium</span> <b>App &#39;Acme CRM&#39; can access mail</b> <span class='muted'>OAuth consent · T1528 · +4</span><p>Delegated scopes: Mail.Read. Publisher: verified (Acme Software Inc.). Consent: AllPrincipals.</p><ul><li class='mono'>clientId: sp-crm</li><li class='mono'>All scopes: User.Read Mail.Read</li></ul></div>
+<details><summary>Incident checklist</summary><pre># BEC containment checklist for (all users) (review before running anything)
+
+## 1. Contain
+Revoke-MgUserSignInSession -UserId &#39;(all users)&#39;                     # kill refresh tokens / sessions
+Update-MgUser -UserId &#39;(all users)&#39; -AccountEnabled:$false           # if takeover is confirmed
+# Reset the password out-of-band and require MFA re-registration (Entra &gt; user &gt; Authentication methods)
+
+## 2. Remove persistence
+Get-InboxRule -Mailbox &#39;(all users)&#39; | Format-List Name,Description    # export first, then Remove-InboxRule the malicious ones
+Set-Mailbox -Identity &#39;(all users)&#39; -ForwardingSmtpAddress $null -ForwardingAddress $null -DeliverToMailboxAndForward $false
+Get-EXOMailboxPermission -Identity &#39;(all users)&#39; | Where-Object { -not $_.IsInherited }   # remove unexpected FullAccess
+Get-MgUserAuthenticationMethod -UserId &#39;(all users)&#39;                 # delete authenticator/phone the user did not add
+# Revoke unknown OAuth grants: Get-MgOauth2PermissionGrant -Filter &quot;principalId eq &#39;&lt;user-object-id&gt;&#39;&quot;
+
+## 3. Scope
+Search-UnifiedAuditLog -StartDate (Get-Date).AddDays(-30) -EndDate (Get-Date) -UserIds &#39;(all users)&#39; -ResultSize 5000
+# Sign-in logs: filter user, look for new countries / IPs / legacy clients (see entra-signin-analyzer)
+# Message trace: mail SENT by the user since first suspicious sign-in (invoice/payment-change requests to clients?)
+# MailItemsAccessed (E5/Audit Premium) to determine what was read
+
+## 4. Notify and recover
+# Warn finance / recent correspondents about fraudulent payment-change requests
+# Recall or follow up on any outbound fraudulent mail; contact the bank immediately for wires
+# Document timeline, IOCs (IPs, rule names, app IDs) and add detections (kql-detection-library KDL-0015/0016)</pre></details></section>
+<section class="card"><header><h2 class="mono">reception@contoso.example</h2><span class="badge" style="background:#a16207">Review · score 2</span></header>
+<div class='f'><span class='sev' style='background:#a16207'>Low</span> <b>Mailbox forwards to another recipient</b> <span class='muted'>Forwarding · T1114.003 · +2</span><p>Forwarding to recipient object &#39;Front Desk Shared&#39;. Confirm it is expected (and that the recipient is not a mail contact pointing outside).</p></div>
+<details><summary>Incident checklist</summary><pre># BEC containment checklist for reception@contoso.example (review before running anything)
+
+## 1. Contain
+Revoke-MgUserSignInSession -UserId &#39;reception@contoso.example&#39;                     # kill refresh tokens / sessions
+Update-MgUser -UserId &#39;reception@contoso.example&#39; -AccountEnabled:$false           # if takeover is confirmed
+# Reset the password out-of-band and require MFA re-registration (Entra &gt; user &gt; Authentication methods)
+
+## 2. Remove persistence
+Get-InboxRule -Mailbox &#39;reception@contoso.example&#39; | Format-List Name,Description    # export first, then Remove-InboxRule the malicious ones
+Set-Mailbox -Identity &#39;reception@contoso.example&#39; -ForwardingSmtpAddress $null -ForwardingAddress $null -DeliverToMailboxAndForward $false
+Get-EXOMailboxPermission -Identity &#39;reception@contoso.example&#39; | Where-Object { -not $_.IsInherited }   # remove unexpected FullAccess
+Get-MgUserAuthenticationMethod -UserId &#39;reception@contoso.example&#39;                 # delete authenticator/phone the user did not add
+# Revoke unknown OAuth grants: Get-MgOauth2PermissionGrant -Filter &quot;principalId eq &#39;&lt;user-object-id&gt;&#39;&quot;
+
+## 3. Scope
+Search-UnifiedAuditLog -StartDate (Get-Date).AddDays(-30) -EndDate (Get-Date) -UserIds &#39;reception@contoso.example&#39; -ResultSize 5000
+# Sign-in logs: filter user, look for new countries / IPs / legacy clients (see entra-signin-analyzer)
+# Message trace: mail SENT by the user since first suspicious sign-in (invoice/payment-change requests to clients?)
+# MailItemsAccessed (E5/Audit Premium) to determine what was read
+
+## 4. Notify and recover
+# Warn finance / recent correspondents about fraudulent payment-change requests
+# Recall or follow up on any outbound fraudulent mail; contact the bank immediately for wires
+# Document timeline, IOCs (IPs, rule names, app IDs) and add detections (kql-detection-library KDL-0015/0016)</pre></details></section>
+<p class="muted">MailboxThreatHunter · github.com/CadGoose/MailboxThreatHunter</p></div></body></html>

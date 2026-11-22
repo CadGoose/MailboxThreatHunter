@@ -1,0 +1,3 @@
+cases/
+*.local.json
+testResults.xml

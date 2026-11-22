@@ -1,0 +1,37 @@
+[
+  {
+    "UserPrincipalName": "cfo@contoso.example",
+    "PrimarySmtpAddress": "cfo@contoso.example",
+    "ForwardingSmtpAddress": null,
+    "ForwardingAddress": null,
+    "DeliverToMailboxAndForward": false
+  },
+  {
+    "UserPrincipalName": "ap.clerk@contoso.example",
+    "PrimarySmtpAddress": "ap.clerk@contoso.example",
+    "ForwardingSmtpAddress": "smtp:ap.clerk.backup@outlook-mail.example",
+    "ForwardingAddress": null,
+    "DeliverToMailboxAndForward": true
+  },
+  {
+    "UserPrincipalName": "hr.manager@contoso.example",
+    "PrimarySmtpAddress": "hr.manager@contoso.example",
+    "ForwardingSmtpAddress": null,
+    "ForwardingAddress": null,
+    "DeliverToMailboxAndForward": false
+  },
+  {
+    "UserPrincipalName": "reception@contoso.example",
+    "PrimarySmtpAddress": "reception@contoso.example",
+    "ForwardingSmtpAddress": null,
+    "ForwardingAddress": "Front Desk Shared",
+    "DeliverToMailboxAndForward": true
+  },
+  {
+    "UserPrincipalName": "sales.lead@contoso.example",
+    "PrimarySmtpAddress": "sales.lead@contoso.example",
+    "ForwardingSmtpAddress": null,
+    "ForwardingAddress": null,
+    "DeliverToMailboxAndForward": false
+  }
+]

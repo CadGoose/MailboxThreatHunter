@@ -1,0 +1,30 @@
+[
+  {
+    "Identity": "cfo@contoso.example",
+    "User": "NT AUTHORITY\\SELF",
+    "AccessRights": [
+      "FullAccess",
+      "ReadPermission"
+    ],
+    "IsInherited": false,
+    "Deny": false
+  },
+  {
+    "Identity": "cfo@contoso.example",
+    "User": "it.admin@contoso.example",
+    "AccessRights": [
+      "FullAccess"
+    ],
+    "IsInherited": false,
+    "Deny": false
+  },
+  {
+    "Identity": "cfo@contoso.example",
+    "User": "CONTOSO\\Organization Management",
+    "AccessRights": [
+      "FullAccess"
+    ],
+    "IsInherited": true,
+    "Deny": false
+  }
+]

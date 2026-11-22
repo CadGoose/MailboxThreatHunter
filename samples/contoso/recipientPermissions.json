@@ -1,0 +1,16 @@
+[
+  {
+    "Identity": "cfo@contoso.example",
+    "Trustee": "NT AUTHORITY\\SELF",
+    "AccessRights": [
+      "SendAs"
+    ]
+  },
+  {
+    "Identity": "cfo@contoso.example",
+    "Trustee": "ea.assistant@contoso.example",
+    "AccessRights": [
+      "SendAs"
+    ]
+  }
+]

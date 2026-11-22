@@ -1,0 +1,26 @@
+[
+  {
+    "id": "g1",
+    "clientId": "sp-mailsync",
+    "consentType": "Principal",
+    "principalId": "u-cfo",
+    "resourceId": "sp-graph",
+    "scope": "openid profile offline_access Mail.ReadWrite Mail.Send"
+  },
+  {
+    "id": "g2",
+    "clientId": "sp-teams",
+    "consentType": "AllPrincipals",
+    "principalId": null,
+    "resourceId": "sp-graph",
+    "scope": "User.Read openid"
+  },
+  {
+    "id": "g3",
+    "clientId": "sp-crm",
+    "consentType": "AllPrincipals",
+    "principalId": null,
+    "resourceId": "sp-graph",
+    "scope": "User.Read Mail.Read"
+  }
+]

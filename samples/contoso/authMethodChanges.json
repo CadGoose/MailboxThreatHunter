@@ -1,0 +1,20 @@
+[
+  {
+    "activityDateTime": "2026-11-18T03:12:44Z",
+    "activityDisplayName": "User registered security info",
+    "targetUserPrincipalName": "cfo@contoso.example",
+    "ipAddress": "192.0.2.77"
+  },
+  {
+    "activityDateTime": "2026-11-18T03:14:02Z",
+    "activityDisplayName": "User deleted security info",
+    "targetUserPrincipalName": "cfo@contoso.example",
+    "ipAddress": "192.0.2.77"
+  },
+  {
+    "activityDateTime": "2026-10-01T15:00:00Z",
+    "activityDisplayName": "User registered security info",
+    "targetUserPrincipalName": "sales.lead@contoso.example",
+    "ipAddress": "198.51.100.40"
+  }
+]
